@@ -1,3 +1,12 @@
+#### 进度
+
+- [x] 整体源码结构梳理
+- [x] Vue插件
+- [x] src - shared模块
+- [ ] Vue实例化过程
+- [ ] Vue观察者模式
+- [ ] 虚拟DOM
+
 <p align="center"><a href="https://vuejs.org" target="_blank" rel="noopener noreferrer"><img width="100" src="https://vuejs.org/images/logo.png" alt="Vue logo"></a></p>
 
 <p align="center">

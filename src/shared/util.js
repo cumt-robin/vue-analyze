@@ -1,27 +1,35 @@
+/**
+ * @description 一些工具方法
+ */
 /* @flow */
 
 export const emptyObject = Object.freeze({})
 
 // These helpers produce better VM code in JS engines due to their
 // explicitness and function inlining.
+// 是undefined或者是unll
 export function isUndef (v: any): boolean %checks {
   return v === undefined || v === null
 }
 
+// 不是undefined，且不是unll
 export function isDef (v: any): boolean %checks {
   return v !== undefined && v !== null
 }
 
+// 是true
 export function isTrue (v: any): boolean %checks {
   return v === true
 }
 
+// 是false
 export function isFalse (v: any): boolean %checks {
   return v === false
 }
 
 /**
  * Check if value is primitive.
+ * 原始类型中非空的部分，包括字符串，数值，Symbol，布尔值
  */
 export function isPrimitive (value: any): boolean %checks {
   return (
@@ -37,6 +45,7 @@ export function isPrimitive (value: any): boolean %checks {
  * Quick object check - this is primarily used to tell
  * Objects from primitive values when we know the value
  * is a JSON-compliant type.
+ * 是不是一个对象，这里符合条件的除了普通对象，可能还有数组等
  */
 export function isObject (obj: mixed): boolean %checks {
   return obj !== null && typeof obj === 'object'
@@ -47,6 +56,7 @@ export function isObject (obj: mixed): boolean %checks {
  */
 const _toString = Object.prototype.toString
 
+// 利用 Object.prototype.toString 得到精准的类型
 export function toRawType (value: any): string {
   return _toString.call(value).slice(8, -1)
 }
@@ -65,12 +75,14 @@ export function isRegExp (v: any): boolean {
 
 /**
  * Check if val is a valid array index.
+ * 是不是一个有效的数组索引，必须是正整数，并且是一个有穷值
  */
 export function isValidArrayIndex (val: any): boolean {
   const n = parseFloat(String(val))
   return n >= 0 && Math.floor(n) === n && isFinite(val)
 }
 
+// 是不是Promise，其实也可以用 _toString 判断
 export function isPromise (val: any): boolean {
   return (
     isDef(val) &&
@@ -81,6 +93,7 @@ export function isPromise (val: any): boolean {
 
 /**
  * Convert a value to a string that is actually rendered.
+ * 转为字符串，主要是方便对象 json 序列化后打印
  */
 export function toString (val: any): string {
   return val == null
@@ -102,6 +115,8 @@ export function toNumber (val: string): number | string {
 /**
  * Make a map and return a function for checking if a key
  * is in that map.
+ * 根据一个,分隔的字符串创建一个字典表，并且返回一个函数，可以检查一个字符串在不在这个字典表中
+ * 可以根据expectsLowerCase启用小写字符检查
  */
 export function makeMap (
   str: string,
@@ -119,16 +134,19 @@ export function makeMap (
 
 /**
  * Check if a tag is a built-in tag.
+ * 检查一个标签是不是内置标签，Vue中的内置标签是slot和component，其他的就是自定义组件或者原生HTML标签了
  */
 export const isBuiltInTag = makeMap('slot,component', true)
 
 /**
  * Check if an attribute is a reserved attribute.
+ * 检查是否是保留属性，比如key,ref,slot,slot-scope,is
  */
 export const isReservedAttribute = makeMap('key,ref,slot,slot-scope,is')
 
 /**
  * Remove an item from an array.
+ * 从数组中移除一个目标值
  */
 export function remove (arr: Array<any>, item: any): Array<any> | void {
   if (arr.length) {
@@ -149,6 +167,9 @@ export function hasOwn (obj: Object | Array<*>, key: string): boolean {
 
 /**
  * Create a cached version of a pure function.
+ * 利用闭包，创建一个纯函数的缓存版本。
+ * 如果某个值从没作为参数执行过，就把参数作为key，纯函数运行结果作为value，缓存在cache对象中，
+ * 如果传给纯函数的参数命中了缓存，就直接取cache的结果，而不用再重复执行纯函数
  */
 export function cached<F: Function> (fn: F): F {
   const cache = Object.create(null)
@@ -161,13 +182,16 @@ export function cached<F: Function> (fn: F): F {
 /**
  * Camelize a hyphen-delimited string.
  */
+// 检测字符串中的连字符-和下一个字符
 const camelizeRE = /-(\w)/g
+// 将连字符-分隔的字符串改为驼峰写法
 export const camelize = cached((str: string): string => {
   return str.replace(camelizeRE, (_, c) => c ? c.toUpperCase() : '')
 })
 
 /**
  * Capitalize a string.
+ * 首字母改为大写
  */
 export const capitalize = cached((str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1)
@@ -175,6 +199,7 @@ export const capitalize = cached((str: string): string => {
 
 /**
  * Hyphenate a camelCase string.
+ * \B 匹配非单词边界，驼峰写法改为连字符-写法
  */
 const hyphenateRE = /\B([A-Z])/g
 export const hyphenate = cached((str: string): string => {
@@ -208,12 +233,14 @@ function nativeBind (fn: Function, ctx: Object): Function {
   return fn.bind(ctx)
 }
 
+// 对 bind 的兼容写法
 export const bind = Function.prototype.bind
   ? nativeBind
   : polyfillBind
 
 /**
  * Convert an Array-like object to a real Array.
+ * 类数组转数组
  */
 export function toArray (list: any, start?: number): Array<any> {
   start = start || 0
@@ -227,6 +254,7 @@ export function toArray (list: any, start?: number): Array<any> {
 
 /**
  * Mix properties into target object.
+ * 扩展对象，影响目标对象 to
  */
 export function extend (to: Object, _from: ?Object): Object {
   for (const key in _from) {
@@ -237,6 +265,7 @@ export function extend (to: Object, _from: ?Object): Object {
 
 /**
  * Merge an Array of Objects into a single Object.
+ * 非深度的 merge
  */
 export function toObject (arr: Array<any>): Object {
   const res = {}
@@ -254,11 +283,13 @@ export function toObject (arr: Array<any>): Object {
  * Perform no operation.
  * Stubbing args to make Flow happy without leaving useless transpiled code
  * with ...rest (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
+ * 无任何行为的函数
  */
 export function noop (a?: any, b?: any, c?: any) {}
 
 /**
  * Always return false.
+ * 永远返回false的函数
  */
 export const no = (a?: any, b?: any, c?: any) => false
 
@@ -266,11 +297,13 @@ export const no = (a?: any, b?: any, c?: any) => false
 
 /**
  * Return the same value.
+ * 返回值本身，不知道具体用意
  */
 export const identity = (_: any) => _
 
 /**
  * Generate a string containing static keys from compiler modules.
+ * 把传入模块的staticKeys加入到数组中，然后用,连接成字符串
  */
 export function genStaticKeys (modules: Array<ModuleOptions>): string {
   return modules.reduce((keys, m) => {
@@ -281,6 +314,7 @@ export function genStaticKeys (modules: Array<ModuleOptions>): string {
 /**
  * Check if two values are loosely equal - that is,
  * if they are plain objects, do they have the same shape?
+ * 比较是否相等，对于对象类型，会递归比较
  */
 export function looseEqual (a: any, b: any): boolean {
   if (a === b) return true
@@ -321,6 +355,7 @@ export function looseEqual (a: any, b: any): boolean {
  * Return the first index at which a loosely equal value can be
  * found in the array (if value is a plain object, the array must
  * contain an object of the same shape), or -1 if it is not present.
+ * 寻找下标，解决元素是对象情况下 findIndex 配合 === 找不到下标的问题
  */
 export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
   for (let i = 0; i < arr.length; i++) {
@@ -331,6 +366,7 @@ export function looseIndexOf (arr: Array<mixed>, val: mixed): number {
 
 /**
  * Ensure a function is called only once.
+ * 利用闭包返回一个新函数，保证通过新函数调用 fn 时，只会执行一次
  */
 export function once (fn: Function): Function {
   let called = false
