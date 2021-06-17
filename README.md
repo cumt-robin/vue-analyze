@@ -1,8 +1,8 @@
 #### 进度
 
 - [x] 整体源码结构梳理
-- [x] Vue插件
-- [x] src - shared模块
+- [x] Vue插件注册机制 src/core/global-api/use
+- [x] src/shared
 - [ ] Vue实例化过程
 - [ ] Vue观察者模式
 - [ ] 虚拟DOM
