@@ -1,4 +1,7 @@
 /* @flow */
+/**
+ * @description Vue静态属性或方法
+ */
 
 import config from '../config'
 import { initUse } from './use'

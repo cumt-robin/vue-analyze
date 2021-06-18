@@ -2,8 +2,9 @@
 
 - [x] 整体源码结构梳理
 - [x] Vue插件注册机制 src/core/global-api/use
-- [x] src/shared
-- [ ] Vue实例化过程
+- [x] 常量和工具方法 src/shared
+- [ ] Vue实例化过程 entry-runtime.js src/core/instance/index.js
+- [ ] 实例化静态属性和方法 src/core/global-api/index.js
 - [ ] Vue观察者模式
 - [ ] 虚拟DOM
 
