@@ -3,13 +3,16 @@
 import config from '../config'
 import { noop } from 'shared/util'
 
+// 在生产环境是空函数
 export let warn = noop
 export let tip = noop
 export let generateComponentTrace = (noop: any) // work around flow check
 export let formatComponentName = (noop: any)
 
 if (process.env.NODE_ENV !== 'production') {
+  // 开发环境下才有 warn, tip 这些
   const hasConsole = typeof console !== 'undefined'
+  // ?:是非捕获组，^|代表
   const classifyRE = /(?:^|[-_])(\w)/g
   const classify = str => str
     .replace(classifyRE, c => c.toUpperCase())
@@ -33,22 +36,32 @@ if (process.env.NODE_ENV !== 'production') {
     }
   }
 
+  // 格式化组件名
   formatComponentName = (vm, includeFile) => {
     if (vm.$root === vm) {
+      // 如果是根组件
       return '<Root>'
     }
+
+    // 找出vm实例选项
     const options = typeof vm === 'function' && vm.cid != null
       ? vm.options
       : vm._isVue
         ? vm.$options || vm.constructor.options
         : vm
+    
+    // 取出name
     let name = options.name || options._componentTag
     const file = options.__file
+
+    // 如果没有name，并且有__file配置，从__file中根据 x.vue 的文件名作为 name
     if (!name && file) {
       const match = file.match(/([^/\\]+)\.vue$/)
       name = match && match[1]
     }
 
+    // 有name就给出大驼峰写法的name，没有name就是匿名组件Anonymous
+    // 有file并且includeFile开启时附上文件路径
     return (
       (name ? `<${classify(name)}>` : `<Anonymous>`) +
       (file && includeFile !== false ? ` at ${file}` : '')
@@ -65,6 +78,7 @@ if (process.env.NODE_ENV !== 'production') {
     return res
   }
 
+  // 生成组件调用树
   generateComponentTrace = vm => {
     if (vm._isVue && vm.$parent) {
       const tree = []

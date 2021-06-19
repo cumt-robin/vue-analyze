@@ -26,6 +26,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   const configDef = {}
   configDef.get = () => config
   if (process.env.NODE_ENV !== 'production') {
+    // 不要全量替换 Vue.config
     configDef.set = () => {
       warn(
         'Do not replace the Vue.config object, set individual fields instead.'
@@ -65,7 +66,9 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   extend(Vue.options.components, builtInComponents)
 
+  // 初始化 use 插件的逻辑
   initUse(Vue)
+  // 初始化 mixin 逻辑
   initMixin(Vue)
   initExtend(Vue)
   initAssetRegisters(Vue)

@@ -5,6 +5,7 @@ import { warn, makeMap, isNative } from '../util/index'
 
 let initProxy
 
+// 这些代理提示仅在开发环境起作用
 if (process.env.NODE_ENV !== 'production') {
   const allowedGlobals = makeMap(
     'Infinity,undefined,NaN,isFinite,isNaN,' +
@@ -13,6 +14,7 @@ if (process.env.NODE_ENV !== 'production') {
     'require' // for Webpack/Browserify
   )
 
+  // 提示使用了不存在的属性或方法
   const warnNonPresent = (target, key) => {
     warn(
       `Property or method "${key}" is not defined on the instance but ` +
@@ -24,6 +26,7 @@ if (process.env.NODE_ENV !== 'production') {
     )
   }
 
+  // 提示属性名使用了保留字符$或_开头，这种变量名是不被 proxy 的
   const warnReservedPrefix = (target, key) => {
     warn(
       `Property "${key}" must be accessed with "$data.${key}" because ` +
@@ -34,17 +37,21 @@ if (process.env.NODE_ENV !== 'production') {
     )
   }
 
+  // 判断是否支持原生Proxy
   const hasProxy =
     typeof Proxy !== 'undefined' && isNative(Proxy)
 
   if (hasProxy) {
+    // Vue内置事件修饰符
     const isBuiltInModifier = makeMap('stop,prevent,self,ctrl,shift,alt,meta,exact')
     config.keyCodes = new Proxy(config.keyCodes, {
       set (target, key, value) {
         if (isBuiltInModifier(key)) {
+          // 警告避免覆盖内置的键值别名
           warn(`Avoid overwriting built-in modifier in config.keyCodes: .${key}`)
           return false
         } else {
+          // 正常设置全局keyCode别名
           target[key] = value
           return true
         }
