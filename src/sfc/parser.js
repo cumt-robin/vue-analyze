@@ -1,5 +1,6 @@
 /* @flow */
 
+// de-indent，是一个去缩进的工具，能把ES6模板字符串转换为一个去缩进的字符串，换行符会变成\n
 import deindent from 'de-indent'
 import { parseHTML } from 'compiler/parser/html-parser'
 import { makeMap } from 'shared/util'

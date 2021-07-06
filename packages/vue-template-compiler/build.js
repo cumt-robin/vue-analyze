@@ -7,18 +7,23 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var deindent = _interopDefault(require('de-indent'));
 var he = _interopDefault(require('he'));
 
+/**
+ * @description 一些工具方法
+ */
 /*  */
 
 var emptyObject = Object.freeze({});
 
 // These helpers produce better VM code in JS engines due to their
 // explicitness and function inlining.
+// 是undefined或者是unll
 function isUndef (v) {
   return v === undefined || v === null
 }
 
 /**
  * Check if value is primitive.
+ * 原始类型中非空的部分，包括字符串，数值，Symbol，布尔值
  */
 function isPrimitive (value) {
   return (
@@ -34,6 +39,7 @@ function isPrimitive (value) {
  * Quick object check - this is primarily used to tell
  * Objects from primitive values when we know the value
  * is a JSON-compliant type.
+ * 是不是一个对象，这里符合条件的除了普通对象，可能还有数组等
  */
 function isObject (obj) {
   return obj !== null && typeof obj === 'object'
@@ -44,6 +50,7 @@ function isObject (obj) {
  */
 var _toString = Object.prototype.toString;
 
+// 利用 Object.prototype.toString 得到精准的类型
 function toRawType (value) {
   return _toString.call(value).slice(8, -1)
 }
@@ -58,6 +65,7 @@ function isPlainObject (obj) {
 
 /**
  * Check if val is a valid array index.
+ * 是不是一个有效的数组索引，必须是正整数，并且是一个有穷值
  */
 function isValidArrayIndex (val) {
   var n = parseFloat(String(val));
@@ -67,6 +75,8 @@ function isValidArrayIndex (val) {
 /**
  * Make a map and return a function for checking if a key
  * is in that map.
+ * 根据一个,分隔的字符串创建一个字典表，并且返回一个函数，可以检查一个字符串在不在这个字典表中
+ * 可以根据expectsLowerCase启用小写字符检查
  */
 function makeMap (
   str,
@@ -84,16 +94,19 @@ function makeMap (
 
 /**
  * Check if a tag is a built-in tag.
+ * 检查一个标签是不是内置标签，Vue中的内置标签是slot和component，其他的就是自定义组件或者原生HTML标签了
  */
 var isBuiltInTag = makeMap('slot,component', true);
 
 /**
  * Check if an attribute is a reserved attribute.
+ * 检查是否是保留属性，比如key,ref,slot,slot-scope,is
  */
 var isReservedAttribute = makeMap('key,ref,slot,slot-scope,is');
 
 /**
  * Remove an item from an array.
+ * 从数组中移除一个目标值
  */
 function remove (arr, item) {
   if (arr.length) {
@@ -114,6 +127,9 @@ function hasOwn (obj, key) {
 
 /**
  * Create a cached version of a pure function.
+ * 利用闭包，创建一个纯函数的缓存版本。
+ * 如果某个值从没作为参数执行过，就把参数作为key，纯函数运行结果作为value，缓存在cache对象中，
+ * 如果传给纯函数的参数命中了缓存，就直接取cache的结果，而不用再重复执行纯函数
  */
 function cached (fn) {
   var cache = Object.create(null);
@@ -126,13 +142,16 @@ function cached (fn) {
 /**
  * Camelize a hyphen-delimited string.
  */
+// 检测字符串中的连字符-和下一个字符
 var camelizeRE = /-(\w)/g;
+// 将连字符-分隔的字符串改为驼峰写法
 var camelize = cached(function (str) {
   return str.replace(camelizeRE, function (_, c) { return c ? c.toUpperCase() : ''; })
 });
 
 /**
  * Hyphenate a camelCase string.
+ * \B 匹配非单词边界，驼峰写法改为连字符-写法
  */
 var hyphenateRE = /\B([A-Z])/g;
 var hyphenate = cached(function (str) {
@@ -166,12 +185,14 @@ function nativeBind (fn, ctx) {
   return fn.bind(ctx)
 }
 
+// 对 bind 的兼容写法
 var bind = Function.prototype.bind
   ? nativeBind
   : polyfillBind;
 
 /**
  * Mix properties into target object.
+ * 扩展对象，影响目标对象 to
  */
 function extend (to, _from) {
   for (var key in _from) {
@@ -186,11 +207,13 @@ function extend (to, _from) {
  * Perform no operation.
  * Stubbing args to make Flow happy without leaving useless transpiled code
  * with ...rest (https://flow.org/blog/2017/05/07/Strict-Function-Call-Arity/).
+ * 无任何行为的函数
  */
 function noop (a, b, c) {}
 
 /**
  * Always return false.
+ * 永远返回false的函数
  */
 var no = function (a, b, c) { return false; };
 
@@ -198,11 +221,13 @@ var no = function (a, b, c) { return false; };
 
 /**
  * Return the same value.
+ * 返回值本身，不知道具体用意
  */
 var identity = function (_) { return _; };
 
 /**
  * Generate a string containing static keys from compiler modules.
+ * 把传入模块的staticKeys加入到数组中，然后用,连接成字符串
  */
 function genStaticKeys (modules) {
   return modules.reduce(function (keys, m) {
@@ -772,12 +797,18 @@ if (typeof Set !== 'undefined' && isNative(Set)) {
   }());
 }
 
+/**
+ * @description 常量定义
+ */
+
+// 资产类型，包括组件，指令，过滤器（管道），方面做初始化，做赋值时引用。
 var ASSET_TYPES = [
   'component',
   'directive',
   'filter'
 ];
 
+// 生命周期名
 var LIFECYCLE_HOOKS = [
   'beforeCreate',
   'created',
@@ -893,13 +924,16 @@ var config = ({
 
 /*  */
 
+// 在生产环境是空函数
 var warn = noop;
 var tip = noop;
 var generateComponentTrace = (noop); // work around flow check
 var formatComponentName = (noop);
 
 if (process.env.NODE_ENV !== 'production') {
+  // 开发环境下才有 warn, tip 这些
   var hasConsole = typeof console !== 'undefined';
+  // ?:是非捕获组，^|代表
   var classifyRE = /(?:^|[-_])(\w)/g;
   var classify = function (str) { return str
     .replace(classifyRE, function (c) { return c.toUpperCase(); })
@@ -921,22 +955,32 @@ if (process.env.NODE_ENV !== 'production') {
     }
   };
 
+  // 格式化组件名
   formatComponentName = function (vm, includeFile) {
     if (vm.$root === vm) {
+      // 如果是根组件
       return '<Root>'
     }
+
+    // 找出vm实例选项
     var options = typeof vm === 'function' && vm.cid != null
       ? vm.options
       : vm._isVue
         ? vm.$options || vm.constructor.options
         : vm;
+    
+    // 取出name
     var name = options.name || options._componentTag;
     var file = options.__file;
+
+    // 如果没有name，并且有__file配置，从__file中根据 x.vue 的文件名作为 name
     if (!name && file) {
       var match = file.match(/([^/\\]+)\.vue$/);
       name = match && match[1];
     }
 
+    // 有name就给出大驼峰写法的name，没有name就是匿名组件Anonymous
+    // 有file并且includeFile开启时附上文件路径
     return (
       (name ? ("<" + (classify(name)) + ">") : "<Anonymous>") +
       (file && includeFile !== false ? (" at " + file) : '')
@@ -953,6 +997,7 @@ if (process.env.NODE_ENV !== 'production') {
     return res
   };
 
+  // 生成组件调用树
   generateComponentTrace = function (vm) {
     if (vm._isVue && vm.$parent) {
       var tree = [];

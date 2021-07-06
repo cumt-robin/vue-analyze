@@ -226,13 +226,13 @@ function genConfig (name) {
       file: opts.dest,
       format: opts.format,
       banner: opts.banner,
-      name: opts.moduleName || 'Vue'
+      name: opts.moduleName || 'Vue',
     },
     onwarn: (msg, warn) => {
       if (!/Circular/.test(msg)) {
         warn(msg)
       }
-    }
+    },
   }
 
   // built-in vars
